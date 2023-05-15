@@ -47,6 +47,22 @@ public class App {
         System.out.println("Pulsa una tecla para continuar");
         sc.nextLine();
 
+
+        // Obtener 4 colores a partir de id 3
+        try {
+            List<Color> colors = colorDAO.getColors(3,4);
+            
+            for (Color color : colors) {
+                System.out.println(color.toString());
+            }
+
+        } catch (DAOException ex) {
+            System.out.printf("Error %s %n", ex.getMessage());
+        }
+        
+        System.out.println("Pulsa una tecla para continuar");
+        sc.nextLine();
+
         // Obtener evento con id 5
         try {
             Event e = eventDAO.getEventById(5);
