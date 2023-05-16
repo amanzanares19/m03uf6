@@ -50,7 +50,38 @@ public class App {
 
         // Obtener 4 colores a partir de id 3
         try {
-            List<Color> colors = colorDAO.getColors(3,4);
+            List<Color> colors = colorDAO.getColors(2,4);
+            
+            for (Color color : colors) {
+                System.out.println(color.toString());
+            }
+
+        } catch (DAOException ex) {
+            System.out.printf("Error %s %n", ex.getMessage());
+        }
+        
+        System.out.println("Pulsa una tecla para continuar");
+        sc.nextLine();
+
+        // Obtener colores que tengan en el nombre Pink
+        try {
+            List<Color> colors = colorDAO.getColors("Pink");
+            
+            for (Color color : colors) {
+                System.out.println(color.toString());
+            }
+
+        } catch (DAOException ex) {
+            System.out.printf("Error %s %n", ex.getMessage());
+        } 
+        
+        System.out.println("Pulsa una tecla para continuar");
+        sc.nextLine();
+
+        // Obtener 2 colores que tengan en el nombre Light 
+        // a partir de segunda coincidencia
+        try {
+            List<Color> colors = colorDAO.getColors("Light", 1, 2);
             
             for (Color color : colors) {
                 System.out.println(color.toString());

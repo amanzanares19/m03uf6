@@ -1,6 +1,5 @@
 package com.pluralcamp.daw.persistence.daos.impl.jdbc;
 
-import com.mysql.cj.xdevapi.Statement;
 import com.pluralcamp.daw.entities.core.Color;
 import com.pluralcamp.daw.persistence.daos.contracts.ColorDAO;
 import com.pluralcamp.daw.persistence.exceptions.DAOException;
@@ -14,6 +13,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class ColorDAOJDBCImpl implements ColorDAO {
+
+    // Para búsquedas sin filtros
+    public static final int DEFAULT_VALUE = 0;
+    public static final String EMPTY = "";
 
     // Para crear conexiones
     private static Connection createConnexion() throws DAOException {
@@ -29,22 +32,41 @@ public class ColorDAOJDBCImpl implements ColorDAO {
     }
 
     // Para recoger datos
-    private static List<Color> readQuery(ResultSet reader) throws SQLException {
+    private static List<Color> readQuery(ResultSet reader, int offset, int count) throws SQLException {
 
         List<Color> colors = new ArrayList<Color>();
 
+        // Si la query no retorna res
+        if (!reader.isBeforeFirst()) {
+            throw new SQLException("No records found in the table.");
+        }
+
+        /***
+         * Si el número de fila es mayor al offset y 
+         * el counterCount es más pequeño o igual al número de elementos límite a mostrar, añadir a la lista.
+         *  */ 
+        int counterOffset = 1;
+        int counterCount = 1;
         while (reader.next()) {
-            var c = new Color(reader.getString("name"), reader.getInt("red"), reader.getInt("green"),
-                    reader.getInt("blue"));
-            c.setId(reader.getLong("id"));
-            colors.add(c);
+
+            if (counterOffset > offset && counterCount <= count) {
+                
+                var c = new Color(reader.getString("name"), reader.getInt("red"), reader.getInt("green"),
+                        reader.getInt("blue"));
+                c.setId(reader.getLong("id"));
+                colors.add(c);
+
+                counterCount++;
+            }
+
+            counterOffset++;
         }
 
         return colors;
 
     }
 
-    private static String getLastID() throws DAOException {
+    private static int getLastID() throws DAOException {
 
         try ( // Crear connexion
                 Connection conn = createConnexion();
@@ -55,7 +77,7 @@ public class ColorDAOJDBCImpl implements ColorDAO {
             // Leer consulta
             try (ResultSet reader = sentSQL.executeQuery();) {
                 if (reader.next()) {
-                    return reader.getString("id");
+                    return Integer.valueOf(reader.getString("id"));
                 } else {
                     throw new SQLException("No records found in the table.");
                 }
@@ -110,7 +132,7 @@ public class ColorDAOJDBCImpl implements ColorDAO {
     @Override
     public List<Color> getColors() throws DAOException {
 
-        List<Color> colors = getColors(0, 0);
+        List<Color> colors = getColors(DEFAULT_VALUE, DEFAULT_VALUE);
 
         return colors;
 
@@ -119,6 +141,23 @@ public class ColorDAOJDBCImpl implements ColorDAO {
     @Override
     public List<Color> getColors(int offset, int count) throws DAOException {
 
+        List<Color> colors = getColors(EMPTY, offset, count);
+
+        return colors;
+
+    }
+
+    @Override
+    public List<Color> getColors(String searchTerm) throws DAOException {
+
+        List<Color> colors = getColors(searchTerm, DEFAULT_VALUE, DEFAULT_VALUE);
+
+        return colors;
+    }
+
+    @Override
+    public List<Color> getColors(String searchTerm, int offset, int count) throws DAOException {
+
         List<Color> colors = new ArrayList<Color>();
 
         try ( // Crear conexión
@@ -126,23 +165,19 @@ public class ColorDAOJDBCImpl implements ColorDAO {
 
                 // Crear consulta
                 CallableStatement sentSQL = conn
-                        .prepareCall("SELECT id, name, red, green, blue FROM colors WHERE id > ? AND id <= ?");) {
+                        .prepareCall("SELECT id, name, red, green, blue FROM colors WHERE name like ?");) {
 
-            // Indicar offset
-            sentSQL.setLong(1, offset);
+            // filter
+            sentSQL.setString(1, "%" + searchTerm + "%");
 
             // Comprobar si no hay límite de filas a devolver
             if (count == 0) {
-                String limit = getLastID();
-                sentSQL.setString(2, limit);
-            } else {
-                int limit = offset + count;
-                sentSQL.setLong(2, limit);
+               count = getLastID();
             }
 
             // Leer consulta
             ResultSet reader = sentSQL.executeQuery();
-            colors = readQuery(reader);
+            colors = readQuery(reader, offset, count);
 
         } catch (SQLException ex) {
 
@@ -153,15 +188,5 @@ public class ColorDAOJDBCImpl implements ColorDAO {
 
         return colors;
 
-    }
-
-    @Override
-    public List<Color> getColors(String searchTerm) throws DAOException {
-        return null;
-    }
-
-    @Override
-    public List<Color> getColors(String searchTerm, int offset, int count) throws DAOException {
-        return null;
     }
 }
