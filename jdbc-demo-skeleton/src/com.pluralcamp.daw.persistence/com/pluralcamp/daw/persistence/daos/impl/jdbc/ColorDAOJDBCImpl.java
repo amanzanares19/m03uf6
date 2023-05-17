@@ -32,7 +32,7 @@ public class ColorDAOJDBCImpl implements ColorDAO {
     }
 
     // Para recoger datos
-    private static List<Color> readQuery(ResultSet reader, int offset, int count) throws SQLException {
+    private List<Color> readQuery(ResultSet reader, int offset, int count) throws SQLException {
 
         List<Color> colors = new ArrayList<Color>();
 
@@ -177,7 +177,7 @@ public class ColorDAOJDBCImpl implements ColorDAO {
 
             // Leer consulta
             ResultSet reader = sentSQL.executeQuery();
-            colors = readQuery(reader, offset, count);
+            colors = this.readQuery(reader, offset, count);
 
         } catch (SQLException ex) {
 

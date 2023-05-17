@@ -106,7 +106,10 @@ public class App {
             System.out.printf("Error %s %n", ex.getMessage());
         }
 
-        // Obtener lista de colors
+        System.out.println("Pulsa una tecla para continuar");
+        sc.nextLine();
+
+        // Obtener lista de eventos
         try {
             List<Event> events = eventDAO.getEvents();
             
@@ -117,5 +120,57 @@ public class App {
         } catch (DAOException ex) {
             System.out.printf("Error %s %n", ex.getMessage());
         }
+
+        System.out.println("Pulsa una tecla para continuar");
+        sc.nextLine();
+
+        // Obtener 2 eventos a partir de id 2
+        try {
+            List<Event> events = eventDAO.getEvents(1,2);
+            
+            for (Event event : events) {
+                System.out.println(event.toString());
+            }
+
+        } catch (DAOException ex) {
+            System.out.printf("Error %s %n", ex.getMessage());
+        }
+        
+        System.out.println("Pulsa una tecla para continuar");
+        sc.nextLine();
+       
+        // Obtener eventos que tengan en el nombre un 5
+        try {
+            List<Event> events = eventDAO.getEvents("5");
+            
+            for (Event event : events) {
+                System.out.println(event.toString());
+            }
+
+        } catch (DAOException ex) {
+            System.out.printf("Error %s %n", ex.getMessage());
+        }
+        
+        System.out.println("Pulsa una tecla para continuar");
+        sc.nextLine();
+        
+        // Obtener 1 evento que tengan en el nombre un 2 
+        // a partir de segunda coincidencia
+        try {
+            List<Event> events = eventDAO.getEvents("2", 1, 1);
+            
+            for (Event event : events) {
+                System.out.println(event.toString());
+            }
+
+        } catch (DAOException ex) {
+            System.out.printf("Error %s %n", ex.getMessage());
+        }
+        
+        System.out.println("Pulsa una tecla para continuar");
+        sc.nextLine();
+
+        // Close scanner
+        sc.close();
     }
 }
