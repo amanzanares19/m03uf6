@@ -53,9 +53,9 @@ DROP TABLE IF EXISTS `employees`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `employees` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `code` varchar(10) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
-  `firstname` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
-  `lastname` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `code` varchar(10) NOT NULL,
+  `firstname` varchar(50) NOT NULL,
+  `lastname` varchar(100) NOT NULL,
   `gender` varchar(10) NOT NULL,
   `birthDate` date NOT NULL,
   `hireDate` date NOT NULL,
@@ -63,7 +63,7 @@ CREATE TABLE `employees` (
   `payments` int unsigned NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `code_UNIQUE` (`code`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --

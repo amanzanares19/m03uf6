@@ -72,7 +72,7 @@ public class ColorDAOJDBCImpl implements ColorDAO {
                 Connection conn = createConnexion();
                 // Crear consulta
                 CallableStatement sentSQL = conn
-                        .prepareCall("SELECT id, name, red, green, blue FROM colors ORDER BY ID DESC LIMIT 1");) {
+                        .prepareCall("CALL getLastId()");) {
 
             // Leer consulta
             try (ResultSet reader = sentSQL.executeQuery();) {
@@ -106,7 +106,7 @@ public class ColorDAOJDBCImpl implements ColorDAO {
                 Connection conn = createConnexion();
                 // Crear consulta
                 CallableStatement sentSQL = conn
-                        .prepareCall("SELECT id, name, red, green, blue FROM colors where id = ?");) {
+                        .prepareCall("CALL getColorById(?)");) {
 
             sentSQL.setLong(1, id);
 
@@ -129,6 +129,7 @@ public class ColorDAOJDBCImpl implements ColorDAO {
         return c;
     }
 
+    // Utilizando la técnica de constructor chaining
     @Override
     public List<Color> getColors() throws DAOException {
 
@@ -165,7 +166,7 @@ public class ColorDAOJDBCImpl implements ColorDAO {
 
                 // Crear consulta
                 CallableStatement sentSQL = conn
-                        .prepareCall("SELECT id, name, red, green, blue FROM colors WHERE name like ?");) {
+                        .prepareCall("CALL getColors(?)");) {
 
             // filter
             sentSQL.setString(1, "%" + searchTerm + "%");
