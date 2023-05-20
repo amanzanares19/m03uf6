@@ -34,7 +34,7 @@ public class EmployeeDAOJDBCImpl implements EmployeeDAO {
     }
 
     // Para recoger datos
-    private List<Employee> readQuery(ResultSet reader, int offset, int count) throws SQLException {
+    private List<Employee> readQuery(ResultSet reader) throws SQLException {
 
         List<Employee> employees = new ArrayList<Employee>();
 
@@ -43,33 +43,20 @@ public class EmployeeDAOJDBCImpl implements EmployeeDAO {
             throw new SQLException("No records found in the table.");
         }
 
-        /***
-         * Si el número de fila es mayor al offset y
-         * el counterCount es más pequeño o igual al número de elementos límite a
-         * mostrar, añadir a la lista.
-         */
-        int counterOffset = 1;
-        int counterCount = 1;
         while (reader.next()) {
 
-            if (counterOffset > offset && counterCount <= count) {
+            // Gender
+            Gender gender = reader.getString("gender") == "MALE" ? Gender.MALE : Gender.FEMALE;
 
-                // Gender
-                Gender gender = reader.getString("gender") == "MALE" ? Gender.MALE : Gender.FEMALE;
+            LocalDate birthDate = reader.getDate("birthDate").toLocalDate();
+            LocalDate hireDate = reader.getDate("hireDate").toLocalDate();
 
-                LocalDate birthDate = reader.getDate("birthDate").toLocalDate();
-                LocalDate hireDate = reader.getDate("hireDate").toLocalDate();
+            var em = new Employee(reader.getString("code"), reader.getString("firstname"),
+                    reader.getString("lastname"),
+                    gender, birthDate, hireDate, reader.getDouble("monthlySalary"), reader.getInt("payments"));
+            em.setId(reader.getLong("id"));
+            employees.add(em);
 
-                var em = new Employee(reader.getString("code"), reader.getString("firstname"),
-                        reader.getString("lastname"),
-                        gender, birthDate, hireDate, reader.getDouble("monthlySalary"), reader.getInt("payments"));
-                em.setId(reader.getLong("id"));
-                employees.add(em);
-
-                counterCount++;
-            }
-
-            counterOffset++;
         }
 
         return employees;
@@ -82,7 +69,7 @@ public class EmployeeDAOJDBCImpl implements EmployeeDAO {
                 Connection conn = createConnexion();
                 // Crear consulta
                 CallableStatement sentSQL = conn
-                        .prepareCall("SELECT id FROM employees ORDER BY ID DESC LIMIT 1");) {
+                        .prepareCall("CALL getLastEmployee()");) {
 
             // Leer consulta
             try (ResultSet reader = sentSQL.executeQuery();) {
@@ -112,14 +99,14 @@ public class EmployeeDAOJDBCImpl implements EmployeeDAO {
                 // Crear consulta
                 CallableStatement sentSQL = conn
                         .prepareCall(
-                                "SELECT id, code, firstname, lastname, gender, birthDate, hireDate, monthlySalary, payments FROM employees where id = ?");) {
+                                "CALL getEmployeeById(?)");) {
 
             sentSQL.setLong(1, id);
 
             // Leer consulta
             try (ResultSet reader = sentSQL.executeQuery();) {
                 if (reader.next()) {
-                    
+
                     // Convertir fechas
                     LocalDate birthDate = reader.getDate("birthDate").toLocalDate();
                     LocalDate hireDate = reader.getDate("hireDate").toLocalDate();
@@ -174,19 +161,21 @@ public class EmployeeDAOJDBCImpl implements EmployeeDAO {
                 // Crear consulta
                 CallableStatement sentSQL = conn
                         .prepareCall(
-                                "SELECT id, code, firstname, lastname, gender, birthDate, hireDate, monthlySalary, payments FROM employees WHERE code like ?");) {
+                                "CALL getEmployees(?,?,?)");) {
 
             // filter
-            sentSQL.setString(1, "%" + searchTerm + "%");
+            sentSQL.setString(1, "%" + searchTerm.trim() + "%");
+            sentSQL.setInt(2, offset);
 
-            // Comprobar si no hay límite de filas a devolver
+            // if count is 0, then the limit is the last row of the table
             if (count == 0) {
                 count = getLastID();
             }
+            sentSQL.setInt(3, count);
 
             // Leer consulta
             ResultSet reader = sentSQL.executeQuery();
-            employees = this.readQuery(reader, offset, count);
+            employees = this.readQuery(reader);
 
         } catch (SQLException ex) {
 

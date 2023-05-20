@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.0
+-- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 19-05-2023 a las 18:48:31
--- Versión del servidor: 10.4.24-MariaDB
--- Versión de PHP: 8.1.6
+-- Tiempo de generación: 20-05-2023 a las 10:18:41
+-- Versión del servidor: 10.4.28-MariaDB
+-- Versión de PHP: 8.2.4
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -20,6 +20,8 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `calendar-restore`
 --
+CREATE DATABASE IF NOT EXISTS `calendar-restore` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
+USE `calendar-restore`;
 
 DELIMITER $$
 --
@@ -31,14 +33,39 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `getColorById` (IN `searchId` INT)  
 	WHERE id = searchId;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `getColors` (IN `searchName` VARCHAR(255))   BEGIN
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getColors` (IN `searchName` VARCHAR(255), IN `offset` INT, IN `count` INT)   BEGIN
 	SELECT * 
  	FROM colors
-	WHERE name like searchName;
+	WHERE name like searchName 
+        LIMIT offset, count;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `getLastId` ()   BEGIN
-	SELECT id, name, red, green, blue FROM colors ORDER BY ID DESC LIMIT 1;
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getEmployeeById` (IN `searchID` INT)   BEGIN
+	SELECT * 
+ 	FROM employees
+	WHERE id = searchID;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getEmployees` (IN `searchCode` VARCHAR(255), IN `offset` INT, IN `count` INT)   SELECT id, code, firstname, lastname, gender, birthDate, hireDate, monthlySalary, payments FROM employees WHERE code like searchCode LIMIT offset, count$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getEventById` (IN `searchID` INT)   BEGIN
+	SELECT * 
+ 	FROM events
+	WHERE id = searchId;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getEvents` (IN `searchName` VARCHAR(255), IN `offset` INT, IN `count` INT)   SELECT id, name, date, startTime, endTime, place, description,                          backgroundColor, textColor, visible FROM events where name like searchName LIMIT offset, count$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getLastColor` ()   BEGIN
+	SELECT id FROM colors ORDER BY id DESC LIMIT 1;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getLastEmployee` ()   BEGIN
+	SELECT id FROM employees ORDER BY id DESC LIMIT 1;
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getLastEvent` ()   BEGIN
+	SELECT id FROM events ORDER BY id DESC LIMIT 1;
 END$$
 
 DELIMITER ;
@@ -55,7 +82,7 @@ CREATE TABLE `colors` (
   `red` int(10) UNSIGNED NOT NULL,
   `green` int(10) UNSIGNED NOT NULL,
   `blue` int(10) UNSIGNED NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 --
 -- Volcado de datos para la tabla `colors`
@@ -219,7 +246,7 @@ CREATE TABLE `employees` (
   `hireDate` date NOT NULL,
   `monthlySalary` double UNSIGNED NOT NULL,
   `payments` int(10) UNSIGNED NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `employees`
@@ -248,7 +275,7 @@ CREATE TABLE `events` (
   `textColor` bigint(20) NOT NULL,
   `visible` bit(1) NOT NULL,
   `registrationDate` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 --
 -- Volcado de datos para la tabla `events`

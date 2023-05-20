@@ -57,7 +57,7 @@ public class EventDAOJDBCImpl implements EventDAO {
                 Connection conn = createConnexion();
                 // Crear consulta
                 CallableStatement sentSQL = conn
-                        .prepareCall("SELECT id, name, red, green, blue FROM colors ORDER BY ID DESC LIMIT 1");) {
+                        .prepareCall("CALL getLastEvent()");) {
 
             // Leer consulta
             try (ResultSet reader = sentSQL.executeQuery();) {
@@ -77,7 +77,7 @@ public class EventDAOJDBCImpl implements EventDAO {
 
     }
 
-    private List<Event> readQuery(ResultSet reader, int offset, int count) throws SQLException, DAOException {
+    private List<Event> readQuery(ResultSet reader) throws SQLException, DAOException {
 
         List<Event> events = new ArrayList<Event>();
 
@@ -86,41 +86,28 @@ public class EventDAOJDBCImpl implements EventDAO {
             throw new SQLException("No records found in the table.");
         }
 
-        /***
-         * Si el número de fila es mayor al offset y
-         * el counterCount es más pequeño o igual al número de elementos límite a
-         * mostrar, añadir a la lista.
-         */
-        int counterOffset = 1;
-        int counterCount = 1;
         while (reader.next()) {
 
-            if (counterOffset > offset && counterCount <= count) {
+            // Convert sql dates to project required format dates
+            LocalDate fecha = this.getLocaDate(reader.getDate("date"));
+            LocalTime startTime = this.getLocaTime(reader.getTime("startTime"));
+            LocalTime endTime = this.getLocaTime(reader.getTime("endTime"));
 
-                // Convert sql dates to project required format dates
-                LocalDate fecha = this.getLocaDate(reader.getDate("date"));
-                LocalTime startTime = this.getLocaTime(reader.getTime("startTime"));
-                LocalTime endTime = this.getLocaTime(reader.getTime("endTime"));
+            // Get backgroundColor and Text Color
+            ColorDAOJDBCImpl colorDAO = new ColorDAOJDBCImpl();
 
-                // Get backgroundColor and Text Color
-                ColorDAOJDBCImpl colorDAO = new ColorDAOJDBCImpl();
+            Color backgroundColor = colorDAO.getColorById(reader.getLong("backgroundColor"));
+            Color textColor = colorDAO.getColorById(reader.getLong("textColor"));
 
-                Color backgroundColor = colorDAO.getColorById(reader.getLong("backgroundColor"));
-                Color textColor = colorDAO.getColorById(reader.getLong("textColor"));
+            // Get visible
+            boolean visible = reader.getBoolean("visible");
 
-                // Get visible
-                boolean visible = reader.getBoolean("visible");
+            // Create Event
+            var e = new Event(reader.getString("name"), fecha, startTime, endTime, reader.getString("place"),
+                    reader.getString("description"), backgroundColor, textColor, visible);
+            e.setId(reader.getLong("id"));
+            events.add(e);
 
-                // Create Event
-                var e = new Event(reader.getString("name"), fecha, startTime, endTime, reader.getString("place"),
-                        reader.getString("description"), backgroundColor, textColor, visible);
-                e.setId(reader.getLong("id"));
-                events.add(e);
-
-                counterCount++;
-            }
-
-            counterOffset++;
         }
 
         return events;
@@ -136,15 +123,14 @@ public class EventDAOJDBCImpl implements EventDAO {
                 Connection conn = createConnexion();
                 // Crear consulta
                 CallableStatement sentSQL = conn
-                        .prepareCall("SELECT id, name, date, startTime, endTime, place, description," +
-                                "backgroundColor, textColor, visible FROM events where id = ?");) {
+                        .prepareCall("CALL getEventById(?)");) {
 
             sentSQL.setLong(1, id);
 
             // Leer consulta
             try (ResultSet reader = sentSQL.executeQuery();) {
                 if (reader.next()) {
-                    
+
                     // Convert sql dates to project required format dates
                     LocalDate fecha = this.getLocaDate(reader.getDate("date"));
                     LocalTime startTime = this.getLocaTime(reader.getTime("startTime"));
@@ -206,20 +192,21 @@ public class EventDAOJDBCImpl implements EventDAO {
 
                 // Crear consulta
                 CallableStatement sentSQL = conn
-                        .prepareCall("SELECT id, name, date, startTime, endTime, place, description," +
-                        "backgroundColor, textColor, visible FROM events where name like ?");) {
+                        .prepareCall("CALL getEvents(?,?,?)");) {
 
             // filter
-            sentSQL.setString(1, "%" + searchTerm + "%");
+            sentSQL.setString(1, "%" + searchTerm.trim() + "%");
+            sentSQL.setInt(2, offset);
 
-            // Comprobar si no hay límite de filas a devolver
+            // if count is 0, then the limit is the last row of the table
             if (count == 0) {
-               count = getLastID();
+                count = getLastID();
             }
+            sentSQL.setInt(3, count);
 
             // Leer consulta
             ResultSet reader = sentSQL.executeQuery();
-            events = this.readQuery(reader, offset, count);
+            events = this.readQuery(reader);
 
         } catch (SQLException ex) {
 

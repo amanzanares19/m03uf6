@@ -32,7 +32,7 @@ public class ColorDAOJDBCImpl implements ColorDAO {
     }
 
     // Para recoger datos
-    private List<Color> readQuery(ResultSet reader, int offset, int count) throws SQLException {
+    private List<Color> readQuery(ResultSet reader) throws SQLException {
 
         List<Color> colors = new ArrayList<Color>();
 
@@ -41,25 +41,13 @@ public class ColorDAOJDBCImpl implements ColorDAO {
             throw new SQLException("No records found in the table.");
         }
 
-        /***
-         * Si el número de fila es mayor al offset y 
-         * el counterCount es más pequeño o igual al número de elementos límite a mostrar, añadir a la lista.
-         *  */ 
-        int counterOffset = 1;
-        int counterCount = 1;
         while (reader.next()) {
 
-            if (counterOffset > offset && counterCount <= count) {
-                
-                var c = new Color(reader.getString("name"), reader.getInt("red"), reader.getInt("green"),
-                        reader.getInt("blue"));
-                c.setId(reader.getLong("id"));
-                colors.add(c);
+            var c = new Color(reader.getString("name"), reader.getInt("red"), reader.getInt("green"),
+                    reader.getInt("blue"));
+            c.setId(reader.getLong("id"));
+            colors.add(c);
 
-                counterCount++;
-            }
-
-            counterOffset++;
         }
 
         return colors;
@@ -72,7 +60,7 @@ public class ColorDAOJDBCImpl implements ColorDAO {
                 Connection conn = createConnexion();
                 // Crear consulta
                 CallableStatement sentSQL = conn
-                        .prepareCall("CALL getLastId()");) {
+                        .prepareCall("CALL getLastColor()");) {
 
             // Leer consulta
             try (ResultSet reader = sentSQL.executeQuery();) {
@@ -166,19 +154,26 @@ public class ColorDAOJDBCImpl implements ColorDAO {
 
                 // Crear consulta
                 CallableStatement sentSQL = conn
-                        .prepareCall("CALL getColors(?)");) {
+                        .prepareCall("CALL getColors(?,?,?)");) {
 
             // filter
-            sentSQL.setString(1, "%" + searchTerm + "%");
+            sentSQL.setString(1, "%" + searchTerm.trim() + "%");
+            sentSQL.setInt(2, offset);
+
+            // if count is 0, then the limit is the last row of the table
+            if (count == 0) {
+                count = getLastID();
+            }
+            sentSQL.setInt(3, count);
 
             // Comprobar si no hay límite de filas a devolver
             if (count == 0) {
-               count = getLastID();
+                count = getLastID();
             }
 
             // Leer consulta
             ResultSet reader = sentSQL.executeQuery();
-            colors = this.readQuery(reader, offset, count);
+            colors = this.readQuery(reader);
 
         } catch (SQLException ex) {
 
