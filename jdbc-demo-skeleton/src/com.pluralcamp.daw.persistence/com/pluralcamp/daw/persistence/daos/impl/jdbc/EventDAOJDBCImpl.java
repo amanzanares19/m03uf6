@@ -77,7 +77,7 @@ public class EventDAOJDBCImpl implements EventDAO {
 
     }
 
-    private List<Event> readQuery(ResultSet reader) throws SQLException, DAOException {
+    private List<Event> readQuery(ResultSet reader) throws SQLException {
 
         List<Event> events = new ArrayList<Event>();
 
@@ -94,18 +94,19 @@ public class EventDAOJDBCImpl implements EventDAO {
             LocalTime endTime = this.getLocaTime(reader.getTime("endTime"));
 
             // Get backgroundColor and Text Color
-            ColorDAOJDBCImpl colorDAO = new ColorDAOJDBCImpl();
 
-            Color backgroundColor = colorDAO.getColorById(reader.getLong("backgroundColor"));
-            Color textColor = colorDAO.getColorById(reader.getLong("textColor"));
+            Color backgroundColor = new Color(reader.getString("c.name"), reader.getInt("c.red"),
+                    reader.getInt("c.green"), reader.getInt("c.blue"));
+            Color textColor = new Color(reader.getString("c2.name"), reader.getInt("c2.red"), reader.getInt("c2.green"),
+                    reader.getInt("c2.blue"));
 
             // Get visible
             boolean visible = reader.getBoolean("visible");
 
             // Create Event
-            var e = new Event(reader.getString("name"), fecha, startTime, endTime, reader.getString("place"),
-                    reader.getString("description"), backgroundColor, textColor, visible);
-            e.setId(reader.getLong("id"));
+            var e = new Event(reader.getString("e.name"), fecha, startTime, endTime, reader.getString("e.place"),
+                    reader.getString("e.description"), backgroundColor, textColor, visible);
+            e.setId(reader.getLong("e.id"));
             events.add(e);
 
         }
@@ -137,18 +138,18 @@ public class EventDAOJDBCImpl implements EventDAO {
                     LocalTime endTime = this.getLocaTime(reader.getTime("endTime"));
 
                     // Get backgroundColor and Text Color
-                    ColorDAOJDBCImpl colorDAO = new ColorDAOJDBCImpl();
-
-                    Color backgroundColor = colorDAO.getColorById(reader.getLong("backgroundColor"));
-                    Color textColor = colorDAO.getColorById(reader.getLong("textColor"));
+                    Color backgroundColor = new Color(reader.getString("c.name"), reader.getInt("c.red"),
+                            reader.getInt("c.green"), reader.getInt("c.blue"));
+                    Color textColor = new Color(reader.getString("c2.name"), reader.getInt("c2.red"),
+                            reader.getInt("c2.green"), reader.getInt("c2.blue"));
 
                     // Get visible
                     boolean visible = reader.getBoolean("visible");
 
                     // Create Event
-                    e = new Event(reader.getString("name"), fecha, startTime, endTime, reader.getString("place"),
-                            reader.getString("description"), backgroundColor, textColor, visible);
-                    e.setId(reader.getLong("id"));
+                    e = new Event(reader.getString("e.name"), fecha, startTime, endTime, reader.getString("e.place"),
+                            reader.getString("e.description"), backgroundColor, textColor, visible);
+                    e.setId(reader.getLong("e.id"));
                 }
             }
 

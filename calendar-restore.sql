@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 20-05-2023 a las 10:18:41
+-- Tiempo de generación: 20-05-2023 a las 10:37:53
 -- Versión del servidor: 10.4.28-MariaDB
 -- Versión de PHP: 8.2.4
 
@@ -50,11 +50,18 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `getEmployees` (IN `searchCode` VARC
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `getEventById` (IN `searchID` INT)   BEGIN
 	SELECT * 
- 	FROM events
-	WHERE id = searchId;
+ 	FROM events e
+         left join colors c on 
+         e.backgroundColor = c.id
+          left join colors c2 on 
+         e.textColor = c2.id
+	WHERE e.id = searchId;
 END$$
 
-CREATE DEFINER=`root`@`localhost` PROCEDURE `getEvents` (IN `searchName` VARCHAR(255), IN `offset` INT, IN `count` INT)   SELECT id, name, date, startTime, endTime, place, description,                          backgroundColor, textColor, visible FROM events where name like searchName LIMIT offset, count$$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getEvents` (IN `searchName` VARCHAR(255), IN `offset` INT, IN `count` INT)   SELECT * FROM events e
+left join colors c on e.backgroundColor = c.id
+left join colors c2 on e.textColor = c2.id
+where e.name like searchName LIMIT offset, count$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `getLastColor` ()   BEGIN
 	SELECT id FROM colors ORDER BY id DESC LIMIT 1;
